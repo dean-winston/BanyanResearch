@@ -8,7 +8,8 @@
     "test": "node --test",
     "cloud:dev": "wrangler dev",
     "cloud:check": "wrangler deploy --dry-run",
-    "cloud:deploy": "wrangler deploy"
+    "cloud:deploy": "wrangler deploy",
+    "cloud:build": "npm test && npm run cloud:check"
   },
   "engines": {
     "node": ">=22"

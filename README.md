@@ -206,16 +206,21 @@ Unreal 官方 Atom 响应会在完整 XML 后附加浏览器脚本：解析器�
 
 线上验证结果：任务 `4d855bb9-e936-4748-9eca-369ac0b6969a` 通过 OpenAI 和 InfoQ 官方订阅新增6篇文章，任务部分成功。进一步无模型调用的单源检查确认：Netflix 官方订阅云端返回429，Medium官方入口同样跳转至该订阅；Unreal官方订阅跳转登录页后403；Game Developer官方RSS403。不要将“找到官方订阅”标记为“云端可用”。已把这些区别写入来源备注，并保留订阅错误及网页回退错误。新增经过登录校验的 `POST /api/sources/:id/check` 云端检查接口，仅发现元数据并更新来源检查状态，不调用模型或保存正文。来源地址在检查过程中被修改时，不回写旧地址的检查状态。
 
-## GitHub 版本维护与自动发布
+## GitHub 版本维护与 Cloudflare 自动发布
 
-工作流：`.github/workflows/cloudflare.yml`。
+推荐使用 Cloudflare Workers Builds：GitHub `main` 更新 → Cloudflare 拉取代码 → `npm run cloud:build`（测试与构建检查）→ `npm run cloud:deploy`。测试失败会阻止发布；数据库及已有 Cloudflare Secrets 保留。
 
-- PR 到 `main`：安装锁定依赖，运行测试并检查 Worker 构建，不发布。
-- 推送到 `main`：测试通过后自动发布到现有 Cloudflare Worker，检查网页及私有接口的登录保护。
-- GitHub Actions 的 `Test and deploy` 页面支持手动 Run workflow（选择 `main`）。发布串行执行，避免中断正在进行的部署。
-- GitHub Repository Settings → Secrets and variables → Actions：设置 Secret `CLOUDFLARE_API_TOKEN` 和 Variable `CLOUDFLARE_ACCOUNT_ID`。
-- 部署令牌限制到本项目所在 Cloudflare 账号，需 Account → Workers Scripts → Edit（包含 Workflows 发布）、Account → D1 → Read（绑定已有数据库）、Account → Account Settings → Read。不要把个人 OAuth/refresh token 放进 CI。
-- 模型密钥、后台密码与会话密钥继续使用 Cloudflare Secrets，不需要复制进 GitHub。发布只更新应用，不导入、清空或重建 D1 资料。
-- 需要回退代码时，在 GitHub revert 相应提交并合入 `main`，由同一流程重新发布。代码回退不会回退数据库内容。
+在现有 Worker `personal-intelligence-system` 的 Settings → Builds → Connect 中连接 GitHub：
 
-自动发布首次运行仍需配置部署令牌，以 Actions 中实际部署成功为准。
+- 仓库：`dean-winston/BanyanResearch`；仅授权这个仓库。
+- 生产分支：`main`；根目录：`/`。
+- Build command：`npm run cloud:build`。
+- Deploy command：`npm run cloud:deploy`。
+- Node.js：22（仓库提供 `.node-version`）。关闭非生产分支自动部署，避免修改生产资源。
+- 使用 Cloudflare 自动生成的构建部署令牌；模型密钥、后台密码及会话密钥继续保留在现有 Worker 的 Secrets 中。
+
+首次连接需要在网页完成 Cloudflare GitHub App 的仓库授权。以 Cloudflare 构建记录实际成功为启用完成；仅提交配置文件不会完成 GitHub App 的授权。
+
+2026-10-07 曾尝试 GitHub Actions，账号返回“recent account payments have failed or your spending limit needs to be increased”，任务未启动。`.github/workflows/cloudflare.yml` 保留为手动备用，自动触发已关闭，避免持续失败或和 Cloudflare Builds 重复发布。若以后使用该备用流程，须先恢复 GitHub Actions 额度，再配置 GitHub Secret `CLOUDFLARE_API_TOKEN`（当前账号 Workers Scripts Edit、D1 Read、Account Settings Read）及 Variable `CLOUDFLARE_ACCOUNT_ID`。
+
+需要回退时，在 GitHub revert 相应提交并合入 `main`，由 Cloudflare 重新发布。代码回退不会回退数据库内容。
