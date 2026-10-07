@@ -1,0 +1,365 @@
+[
+  {
+    "id": "simon-willison",
+    "name": "Simon Willison",
+    "url": "https://simonwillison.net/",
+    "type": "blogger",
+    "topics": [
+      "ai"
+    ],
+    "notes": "LLM 工具、Agent 与实际实验；优先关注有代码或实验记录的文章。",
+    "enabled": true,
+    "language": "en",
+    "feedUrl": "https://simonwillison.net/atom/everything/",
+    "provenance": "https://simonwillison.net/",
+    "checkedAt": "2026-10-06",
+    "verification": "网站可访问；订阅地址待验证",
+    "httpStatus": "200"
+  },
+  {
+    "id": "lilian-weng",
+    "name": "Lilian Weng",
+    "url": "https://lilianweng.github.io/",
+    "type": "blogger",
+    "topics": [
+      "ai"
+    ],
+    "notes": "研究综述与论文脉络；适合补课，注意原文发表时间。",
+    "enabled": true,
+    "language": "en",
+    "feedUrl": "https://lilianweng.github.io/index.xml",
+    "provenance": "https://github.com/antoinebrl/awesome-ml-blogs",
+    "checkedAt": "2026-10-06",
+    "verification": "网站可访问；订阅地址待验证",
+    "httpStatus": "200"
+  },
+  {
+    "id": "chip-huyen",
+    "name": "Chip Huyen",
+    "url": "https://huyenchip.com/blog/",
+    "type": "blogger",
+    "topics": [
+      "ai"
+    ],
+    "notes": "AI 工程、评估与生产系统经验。",
+    "enabled": true,
+    "language": "en",
+    "feedUrl": "https://huyenchip.com/feed.xml",
+    "provenance": "https://github.com/antoinebrl/awesome-ml-blogs",
+    "checkedAt": "2026-10-06",
+    "verification": "网站可访问；订阅地址待验证",
+    "httpStatus": "200"
+  },
+  {
+    "id": "eugene-yan",
+    "name": "Eugene Yan",
+    "url": "https://eugeneyan.com/",
+    "type": "blogger",
+    "topics": [
+      "ai",
+      "backend"
+    ],
+    "notes": "推荐系统与应用机器学习，关注设计取舍和评估。",
+    "enabled": true,
+    "language": "en",
+    "feedUrl": "",
+    "provenance": "https://github.com/antoinebrl/awesome-ml-blogs",
+    "checkedAt": "2026-10-06",
+    "verification": "网站可访问；订阅地址待验证",
+    "httpStatus": "200"
+  },
+  {
+    "id": "openai-news",
+    "name": "OpenAI News",
+    "url": "https://openai.com/news/",
+    "type": "company",
+    "topics": [
+      "ai"
+    ],
+    "notes": "模型、研究与产品的一手信息；产品宣传与技术证据分别判断。\n官方 RSS：https://openai.com/news/rss.xml；2026-10-07 云端实际采集通过。",
+    "enabled": true,
+    "language": "en",
+    "feedUrl": "https://openai.com/news/rss.xml",
+    "provenance": "https://github.com/antoinebrl/awesome-ml-blogs",
+    "checkedAt": "2026-10-07",
+    "verification": "官方订阅云端采集已验证",
+    "httpStatus": ""
+  },
+  {
+    "id": "anthropic-engineering",
+    "name": "Anthropic Engineering",
+    "url": "https://www.anthropic.com/engineering",
+    "type": "company",
+    "topics": [
+      "ai"
+    ],
+    "notes": "Agent、工具调用与工程实践；关注可复现的技术细节。",
+    "enabled": true,
+    "language": "en",
+    "feedUrl": "",
+    "provenance": "https://www.anthropic.com/engineering",
+    "checkedAt": "2026-10-06",
+    "verification": "网站可访问；订阅地址待验证",
+    "httpStatus": "200"
+  },
+  {
+    "id": "hugging-face-blog",
+    "name": "Hugging Face Blog",
+    "url": "https://huggingface.co/blog",
+    "type": "company",
+    "topics": [
+      "ai"
+    ],
+    "notes": "开源模型、训练与推理实践；区分官方文章和社区投稿。",
+    "enabled": true,
+    "language": "en",
+    "feedUrl": "",
+    "provenance": "https://github.com/antoinebrl/awesome-ml-blogs",
+    "checkedAt": "2026-10-06",
+    "verification": "网站访问受限，待复核",
+    "httpStatus": "000"
+  },
+  {
+    "id": "google-deepmind",
+    "name": "Google DeepMind",
+    "url": "https://deepmind.google/discover/blog/",
+    "type": "company",
+    "topics": [
+      "ai"
+    ],
+    "notes": "研究成果与方法介绍；进一步追溯论文和代码。",
+    "enabled": true,
+    "language": "en",
+    "feedUrl": "",
+    "provenance": "https://github.com/antoinebrl/awesome-ml-blogs",
+    "checkedAt": "2026-10-06",
+    "verification": "网站访问受限，待复核",
+    "httpStatus": "000"
+  },
+  {
+    "id": "infoq-ai",
+    "name": "InfoQ AI",
+    "url": "https://www.infoq.com/ai-ml-data-eng/",
+    "type": "news",
+    "topics": [
+      "ai",
+      "backend"
+    ],
+    "notes": "AI 与数据工程新闻和实践访谈；新闻结论需要回溯一手来源。\n官方 RSS：https://feed.infoq.com/ai-ml-data-eng/；2026-10-07 云端实际采集通过。",
+    "enabled": true,
+    "language": "en",
+    "feedUrl": "https://feed.infoq.com/ai-ml-data-eng/",
+    "provenance": "https://www.infoq.com/ai-ml-data-eng/",
+    "checkedAt": "2026-10-07",
+    "verification": "官方订阅云端采集已验证",
+    "httpStatus": ""
+  },
+  {
+    "id": "red-blob-games",
+    "name": "Red Blob Games",
+    "url": "https://www.redblobgames.com/",
+    "type": "blogger",
+    "topics": [
+      "game"
+    ],
+    "notes": "寻路、地图与游戏数学的交互式教程，适合长期补课。",
+    "enabled": true,
+    "language": "en",
+    "feedUrl": "https://www.redblobgames.com/blog/posts.xml",
+    "provenance": "https://github.com/FronkonGames/Awesome-Gamedev",
+    "checkedAt": "2026-10-06",
+    "verification": "网站可访问；订阅地址待验证",
+    "httpStatus": "200"
+  },
+  {
+    "id": "gaffer-on-games",
+    "name": "Gaffer on Games",
+    "url": "https://gafferongames.com/",
+    "type": "blogger",
+    "topics": [
+      "game",
+      "backend"
+    ],
+    "notes": "游戏网络同步、物理与网络协议实践；注意文章年代。",
+    "enabled": true,
+    "language": "en",
+    "feedUrl": "https://gafferongames.com/index.xml",
+    "provenance": "https://github.com/FronkonGames/Awesome-Gamedev",
+    "checkedAt": "2026-10-06",
+    "verification": "网站可访问；订阅地址待验证",
+    "httpStatus": "200"
+  },
+  {
+    "id": "game-programming-patterns",
+    "name": "Game Programming Patterns",
+    "url": "https://gameprogrammingpatterns.com/",
+    "type": "blogger",
+    "topics": [
+      "game"
+    ],
+    "notes": "游戏架构与设计模式的在线书；作为补课参考，非高频新闻源。",
+    "enabled": true,
+    "language": "en",
+    "feedUrl": "",
+    "provenance": "https://github.com/FronkonGames/Awesome-Gamedev",
+    "checkedAt": "2026-10-06",
+    "verification": "网站可访问；订阅地址待验证",
+    "httpStatus": "200"
+  },
+  {
+    "id": "godot-news",
+    "name": "Godot News",
+    "url": "https://godotengine.org/news/",
+    "type": "company",
+    "topics": [
+      "game"
+    ],
+    "notes": "引擎项目官方动态、渲染和版本变化；此处归入官方技术来源。",
+    "enabled": true,
+    "language": "en",
+    "feedUrl": "https://godotengine.org/rss.xml",
+    "provenance": "https://godotengine.org/news/",
+    "checkedAt": "2026-10-06",
+    "verification": "网站可访问；订阅地址待验证",
+    "httpStatus": "200"
+  },
+  {
+    "id": "unreal-engine-tech-blog",
+    "name": "Unreal Engine Tech Blog",
+    "url": "https://www.unrealengine.com/en-US/tech-blog",
+    "type": "company",
+    "topics": [
+      "game"
+    ],
+    "notes": "引擎技术与制作实践；按具体版本判断适用性。\n官方英文 Atom（包含新闻、访谈和技术博客）；2026-10-07 本地解析通过，云端订阅跳转登录页后返回403；暂不能保证云端可用。",
+    "enabled": true,
+    "language": "en",
+    "feedUrl": "https://www.unrealengine.com/rss?lang=en-US",
+    "provenance": "https://www.unrealengine.com/en-US/tech-blog",
+    "checkedAt": "2026-10-07",
+    "verification": "见备注中的官方入口验证结果",
+    "httpStatus": ""
+  },
+  {
+    "id": "game-developer",
+    "name": "Game Developer",
+    "url": "https://www.gamedeveloper.com/",
+    "type": "news",
+    "topics": [
+      "game"
+    ],
+    "notes": "开发经验和行业报道；优先技术文章，降低商业资讯权重。\n官方 RSS：https://www.gamedeveloper.com/rss.xml；2026-10-07 云端订阅返回403。",
+    "enabled": true,
+    "language": "en",
+    "feedUrl": "https://www.gamedeveloper.com/rss.xml",
+    "provenance": "https://github.com/FronkonGames/Awesome-Gamedev",
+    "checkedAt": "2026-10-07",
+    "verification": "见备注中的官方入口验证结果",
+    "httpStatus": ""
+  },
+  {
+    "id": "martin-fowler",
+    "name": "Martin Fowler",
+    "url": "https://martinfowler.com/",
+    "type": "blogger",
+    "topics": [
+      "backend"
+    ],
+    "notes": "软件架构、重构与交付实践，关注方案的适用条件。",
+    "enabled": true,
+    "language": "en",
+    "feedUrl": "",
+    "provenance": "https://martinfowler.com/",
+    "checkedAt": "2026-10-06",
+    "verification": "网站可访问；订阅地址待验证",
+    "httpStatus": "200"
+  },
+  {
+    "id": "julia-evans",
+    "name": "Julia Evans",
+    "url": "https://jvns.ca/",
+    "type": "blogger",
+    "topics": [
+      "backend"
+    ],
+    "notes": "网络、Linux 与调试基础，适合定位知识缺口。",
+    "enabled": true,
+    "language": "en",
+    "feedUrl": "https://jvns.ca/atom.xml",
+    "provenance": "https://jvns.ca/",
+    "checkedAt": "2026-10-06",
+    "verification": "网站可访问；订阅地址待验证",
+    "httpStatus": "200"
+  },
+  {
+    "id": "cloudflare-blog",
+    "name": "Cloudflare Blog",
+    "url": "https://blog.cloudflare.com/",
+    "type": "company",
+    "topics": [
+      "backend"
+    ],
+    "notes": "网络、边缘计算、性能与事故复盘；区分技术内容与产品发布。",
+    "enabled": true,
+    "language": "en",
+    "feedUrl": "https://blog.cloudflare.com/rss/",
+    "provenance": "https://github.com/upgundecha/awesome-engineering",
+    "checkedAt": "2026-10-06",
+    "verification": "网站可访问；订阅地址待验证",
+    "httpStatus": "200"
+  },
+  {
+    "id": "aws-builders-library",
+    "name": "AWS Builders Library",
+    "url": "https://aws.amazon.com/builders-library/",
+    "type": "company",
+    "topics": [
+      "backend"
+    ],
+    "notes": "分布式系统可靠性与运营经验；作为深度补课材料。\n2026-10-07：暂未找到可用官方 RSS/API；网页跳转至 builder.aws.com，云端访问返回403。",
+    "enabled": true,
+    "language": "en",
+    "feedUrl": "",
+    "provenance": "https://aws.amazon.com/builders-library/",
+    "checkedAt": "2026-10-07",
+    "verification": "见备注中的官方入口验证结果",
+    "httpStatus": ""
+  },
+  {
+    "id": "netflix-techblog",
+    "name": "Netflix TechBlog",
+    "url": "https://netflixtechblog.com/",
+    "type": "company",
+    "topics": [
+      "backend",
+      "ai"
+    ],
+    "notes": "大规模服务、数据和工程实践；注意规模与当前项目是否匹配。\n官方 RSS：https://netflixtechblog.com/feed；2026-10-07 本地可读，云端返回429限流；官方 Medium 入口也跳转到该订阅，暂不能保证云端可用。",
+    "enabled": true,
+    "language": "en",
+    "feedUrl": "https://netflixtechblog.com/feed",
+    "provenance": "https://github.com/upgundecha/awesome-engineering",
+    "checkedAt": "2026-10-07",
+    "verification": "见备注中的官方入口验证结果",
+    "httpStatus": ""
+  },
+  {
+    "id": "infoq",
+    "name": "InfoQ 中文",
+    "url": "https://www.infoq.cn/",
+    "type": "news",
+    "topics": [
+      "backend",
+      "ai",
+      "game"
+    ],
+    "notes": "中文技术报道与架构实践；全站主题较广，需要按领域过滤。",
+    "enabled": true,
+    "language": "zh",
+    "feedUrl": "",
+    "provenance": "https://www.infoq.cn/",
+    "checkedAt": "2026-10-06",
+    "verification": "网站可访问；订阅地址待验证",
+    "httpStatus": "200"
+  }
+]

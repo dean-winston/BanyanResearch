@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BanyanResearch</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <section id="loginScreen" class="login-screen hidden"><form id="loginForm" class="login-card"><div class="eyebrow muted">BANYAN RESEARCH</div><h1>登录个人空间</h1><p>输入访问密码，查看你的研究与推荐。</p><label for="loginPassword">访问密码</label><input id="loginPassword" name="password" type="password" autocomplete="current-password" required><p id="loginError" class="error-notice hidden" role="alert"></p><button class="button dark" type="submit">登录</button></form></section>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">✳</span><span>BANYAN<br>RESEARCH</span></div>
+      <div class="side-label">工作空间</div>
+      <nav aria-label="主导航">
+        <button class="nav active" data-view="inbox" title="为你推荐"><span>✧</span> 为你推荐</button>
+        <button class="nav" data-view="profile" title="我的研究"><span>⌘</span> 我的研究</button>
+        <button class="nav" data-view="questions" title="研究问题"><span>?</span> 研究问题</button>
+        <button class="nav" data-view="agents" title="持续助手"><span>✳</span> 持续助手</button>
+        <button class="nav" data-view="tasks" title="更新与任务"><span>↻</span> 更新与任务</button>
+        <button class="nav" data-view="overview"><span>◫</span> 总览</button>
+        <button class="nav" data-view="knowledge"><span>▤</span> 知识库</button>
+        <button class="nav" data-view="sources"><span>◎</span> 信息源管理</button>
+        <button class="nav" data-view="ask"><span>✦</span> 智能分析</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="status-dot"></div><span id="modelStatus">正在检查模型</span>
+      </div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div class="breadcrumb">个人空间 <span>/</span> <strong id="pageName">总览</strong></div>
+        <div class="top-actions"><span id="today"></span><button class="plain-link hidden" id="logoutButton">退出登录</button><button class="button dark" id="addTop">＋ 添加知识</button></div>
+      </header>
+
+      <div id="connectionNotice" class="connection-notice hidden" role="status"></div>
+      <section id="overview" class="view">
+        <div class="hero">
+          <div class="eyebrow">YOUR WORLD, CONNECTED</div>
+          <h1>让你的知识，<br><em>持续生长。</em></h1>
+          <p>把外部世界、工程活动与思想演化放在一起。随时记录，随时追问，从已有的资料中发现新的联系。</p>
+          <div class="hero-actions"><button class="button light" id="askHero">✦ 开始分析 <span>↗</span></button><button class="text-button" id="importHero">导入本地资料 →</button></div>
+          <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="hero-star">✳</div>
+        </div>
+
+        <div class="section-heading"><div><div class="eyebrow muted">THREE PERSPECTIVES</div><h2>你的三个知识视角</h2></div><span>所有信息最终汇入你的个人知识库</span></div>
+        <div class="agent-grid">
+          <button class="agent-card research" data-category="research"><div class="agent-icon">⌕</div><div class="agent-index">01 / RESEARCH</div><h3>外部世界</h3><p>文章、观察、资料与研究线索</p><div class="agent-bottom"><span id="researchCount">0 条记录</span><b>↗</b></div></button>
+          <button class="agent-card engineering" data-category="engineering"><div class="agent-icon">⌘</div><div class="agent-index">02 / ENGINEERING</div><h3>工程活动</h3><p>代码、项目决策与实践经验</p><div class="agent-bottom"><span id="engineeringCount">0 条记录</span><b>↗</b></div></button>
+          <button class="agent-card writing" data-category="writing"><div class="agent-icon">✎</div><div class="agent-index">03 / WRITING</div><h3>思想演化</h3><p>想法、草稿、反思与长期问题</p><div class="agent-bottom"><span id="writingCount">0 条记录</span><b>↗</b></div></button>
+        </div>
+
+        <div class="section-heading recent-title"><div><div class="eyebrow muted">RECENTLY CAPTURED</div><h2>最近收录</h2></div><button class="plain-link" id="viewAll">查看全部 ↗</button></div>
+        <div id="recentList" class="recent-list"></div>
+      </section>
+
+      <section id="knowledge" class="view">
+        <div class="page-heading"><div class="eyebrow muted">YOUR KNOWLEDGE</div><h1>知识库</h1><p>所有输入汇聚于此。按主题搜索，或切换三个视角。</p></div>
+        <div class="toolbar"><div class="search-wrap"><span>⌕</span><input id="searchInput" type="search" placeholder="搜索标题或内容…"></div><button class="button outline" id="importButton">↑ 导入文件夹</button><button class="button dark" id="addButton">＋ 添加知识</button></div>
+        <div class="filters" role="group" aria-label="按视角筛选"><button class="filter active" data-filter="all">全部 <span id="allCount">0</span></button><button class="filter" data-filter="research">外部世界</button><button class="filter" data-filter="engineering">工程活动</button><button class="filter" data-filter="writing">思想演化</button></div>
+        <p id="cloudImportNotice" class="muted-copy hidden">云端无法读取这台电脑的文件夹。可以使用“添加知识”保存资料；本地数据迁移需另行处理。</p><div id="knowledgeList" class="knowledge-list"></div>
+      </section>
+
+      <section id="ask" class="view">
+        <div class="page-heading"><div class="eyebrow muted">SYNTHESIZE & DISCOVER</div><h1>向你的知识提问</h1><p>让三个视角协同，基于收录的资料给出有来源的回答。</p></div>
+        <div class="ask-layout"><div class="ask-main"><form id="askForm"><label for="question">你想探索什么？</label><textarea id="question" placeholder="例如：最近的研究和项目经验中，有哪些共同的主题？" required></textarea><div class="ask-form-bottom"><span>回答会列出所依据的资料</span><button class="button dark" type="submit" id="askSubmit">✦ 生成分析</button></div></form><div id="answerPanel" class="answer-panel hidden"></div></div><div class="ask-side"><div class="eyebrow muted">IDEAS TO EXPLORE</div><h3>从一个问题开始</h3><button class="suggestion">最近的研究与我的项目有什么联系？ ↗</button><button class="suggestion">我的想法在哪些主题上发生了变化？ ↗</button><button class="suggestion">下一步值得深入研究什么？ ↗</button><div class="side-note">分析仅使用当前知识库中的内容。资料不足时会明确说明。</div></div></div>
+      </section>
+      <section id="sources" class="view">
+        <div class="page-heading"><div class="eyebrow muted">CURATED SOURCES</div><h1>信息源管理</h1><p>维护值得关注的博客与网站，为每个来源留下你的判断。</p></div>
+        <div class="source-notice">只采集已启用的信息源。外部文章保存链接、短摘要和推荐理由，不保存全文；采集结果可在下方及任务页面查看。</div>
+        <div class="toolbar"><div class="search-wrap"><span>⌕</span><input id="sourceSearch" type="search" aria-label="搜索信息源" placeholder="搜索名称、网址或备注…"></div><button id="newSource" class="button dark">＋ 添加信息源</button></div>
+        <div class="source-filters"><select id="sourceTopic" aria-label="筛选领域"><option value="">全部领域</option value="ai">AI</option><option value="game">游戏开发</option><option value="backend">服务端</option></select><select id="sourceType" aria-label="筛选类型"><option value="">全部类型</option><option value="blogger">个人博客</option><option value="company">公司 / 官方技术站</option><option value="news">新闻媒体</option></select><select id="sourceStatus" aria-label="筛选状态"><option value="">全部状态</option><option value="enabled">已启用</option><option value="disabled">已停用</option></select><span id="sourceCount" role="status"></span></div>
+        <div id="sourceCards" class="source-cards"></div>
+      </section>
+
+      <section id="inbox" class="view active">
+        <div class="page-heading"><div class="eyebrow muted">CONNECTED TO YOUR WORK</div><h1>为你推荐</h1><p>从外部世界，找到与你的研究和实践有关的新线索。</p></div>
+        <div class="toolbar"><div class="search-wrap"><span>⌕</span><input id="recommendSearch" type="search" aria-label="搜索推荐" placeholder="搜索文章、推荐理由…"></div><button class="button dark" data-job="daily">↻ 立即更新</button></div>
+        <div class="source-filters"><select id="recommendFilter" aria-label="推荐状态"><option value="">全部推荐</option><option value="new">未处理</option><option value="useful">有用</option><option value="later">稍后看</option><option value="known">已了解</option><option value="irrelevant">不相关</option></select><span id="recommendCount"></span></div>
+        <div id="runningNotice" class="source-notice hidden" role="status"></div><div id="recommendCards" class="recommend-cards"></div>
+        <details class="collected-panel"><summary>已收集的文章 <span id="articleCount"></span></summary><p class="muted-copy">包括尚未形成推荐的文章。先更新博客或维护研究问题，帮助系统找到联系。</p><div id="articleList"></div></details>
+      </section>
+      <section id="profile" class="view">
+        <div class="page-heading"><div class="eyebrow muted">YOUR THINKING & PRACTICE</div><h1>我的研究</h1><p>博客保留完整文章，项目观点附上代码依据，供你核对。</p></div>
+        <div class="section-heading"><h2>博客文章 <span id="blogCount" class="count-label"></span></h2><button class="button outline" data-job="blog">同步博客</button></div><div id="blogCards" class="profile-grid"></div>
+        <div class="section-heading recent-title"><h2>GitHub 项目 <span id="repoCount" class="count-label"></span></h2><button class="button outline" data-job="repositories">同步并分析项目</button></div><p class="muted-copy">非 Fork 项目作为你的工程实践。项目按需分析，不持续监听代码变化。</p><div id="repoCards" class="profile-grid"></div>
+      </section>
+      <section id="questions" class="view">
+        <div class="page-heading"><div class="eyebrow muted">QUESTIONS WORTH FOLLOWING</div><h1>研究问题</h1><p>记录正在探索的问题，让新信息能够回应你的关注。</p></div>
+        <div class="toolbar"><div class="search-wrap"><input id="questionSearch" type="search" aria-label="搜索研究问题" placeholder="搜索研究问题…"></div><button class="button dark" id="newQuestion">＋ 添加问题</button></div><div id="questionCards" class="profile-grid"></div>
+      </section>
+      <section id="tasks" class="view">
+        <div class="page-heading"><div class="eyebrow muted">KEEP YOUR WORLD UP TO DATE</div><h1>更新与任务</h1><p>查看更新进度、失败原因和每天的运行设置。</p></div>
+        <div id="runtimeNotice" class="source-notice"></div>
+        <form id="settingsForm" class="settings-card"><h2>采集规则与处理上限</h2><label id="legacyDailyControl" class="inline-check"><input name="dailyEnabled" type="checkbox">每天更新博客、采集文章并生成推荐</label><p id="dailyScheduleNote" class="muted-copy">本地版本需要服务持续运行。GitHub 项目由你手动更新。</p><div class="settings-fields"><label>每个来源候选篇数<input name="sourceArticleLimit" type="number" min="1" max="20" required><span class="muted-copy">1–20 篇，去重后再按每轮上限分析。</span></label><label>采集最近多少天<input name="collectionSinceDays" type="number" min="1" max="365" required><span class="muted-copy">1–365 天；发布日期不明的内容仍可能保留。</span></label><label>每轮最多处理文章<input name="maxArticlesPerRun" type="number" min="1" max="100" required></label><label>每轮最多分析项目<input name="maxRepoAnalysesPerRun" type="number" min="1" max="20" required></label></div><p class="muted-copy">保存后用于下一轮采集，不会立即执行，也不会删除已有资料。超过本轮上限的候选需下次重新发现。</p><button class="button dark" type="submit">保存采集规则</button><span id="settingsSaved" role="status"></span></form>
+        <div class="job-actions"><button class="button outline" data-job="daily">全部更新</button><button class="button outline" data-job="collect">采集信息源</button><button class="button outline" data-job="blog">同步博客</button><button class="button outline" data-job="repositories">同步项目</button><button class="button outline" data-job="recommend">生成推荐</button></div><div id="jobList"></div>
+      </section>
+      <section id="agents" class="view"><div class="page-heading"><div class="eyebrow muted">CONTINUOUS RESEARCH</div><h1>持续助手</h1><p>围绕你的研究目标定期判断下一步，记录行动理由和延续工作的记忆。</p></div><div id="agentRuntime" class="source-notice"></div><form id="agentSettingsForm" class="settings-card"><h2>运行节奏与上限</h2><label class="inline-check"><input name="enabled" type="checkbox">开启持续运行</label><p class="muted-copy">默认关闭。开启前需配置可用模型和运行上限。工程助手始终由你手动触发，不自动监听仓库。</p><div class="settings-fields"><label>自动检查间隔（小时）<input name="checkIntervalHours" type="number" min="1" max="168" required><span class="muted-copy">每隔多久检查助手是否到期，1–168 小时。</span></label><label>助手最短唤醒间隔（小时）<input name="wakeIntervalHours" type="number" min="1" max="168" required></label><label>每天最多决策<input name="maxDecisionsPerDay" type="number" min="1" max="100" required></label><label>每天最多行动<input name="maxActionsPerDay" type="number" min="1" max="100" required></label></div><p class="muted-copy">自动检查最细为 1 小时。检查到期后，只有达到唤醒时间的助手才会决策；助手也可以选择等待。修改检查间隔后从下一次整点检查生效；已有助手的下次唤醒时间保留。</p><p class="muted-copy">每日次数由自动助手共享，北京时间 08:00 重置；一次行动可能调用模型多次，次数上限不等于金额上限。</p><a class="plain-link" href="#tasks">修改采集范围与篇数 →</a><br><button class="button dark" type="submit">保存运行设置</button></form><div class="section-heading recent-title"><h2>助手与工作记忆</h2><button id="wakeAgents" class="button outline">立即唤醒</button></div><div id="agentCards" class="profile-grid"></div><div class="section-heading recent-title"><h2>最近行动</h2></div><div id="agentEventList"></div></section>
+    </main>
+  </div>
+
+  <dialog id="questionDialog"><form id="researchQuestionForm" class="dialog-form"><div class="dialog-head"><h2 id="questionDialogTitle">研究问题</h2><button class="close" type="button" data-close="questionDialog" aria-label="关闭">×</button></div><label>问题<input name="title" maxlength="300" required></label><label>背景与判断标准<textarea name="notes" rows="4" maxlength="4000"></textarea></label><label>状态<select name="status"><option value="active">正在研究</option><option value="paused">暂时搁置</option><option value="resolved">已解决</option></select></label><fieldset class="source-topics"><legend>关注领域</legend><label><input name="topics" type="checkbox" value="ai">AI</label><label><input name="topics" type="checkbox" value="game">游戏开发</label><label><input name="topics" type="checkbox" value="backend">服务端</label></fieldset><label>相关链接（可选）<input name="url" type="url"></label><div class="dialog-actions"><button class="button outline" type="button" data-close="questionDialog">取消</button><button class="button dark" type="submit">保存问题</button></div></form></dialog>
+  <dialog id="blogDialog"><div class="dialog-form"><div class="dialog-head"><h2 id="blogDetailTitle"></h2><button class="close" type="button" data-close="blogDialog" aria-label="关闭">×</button></div><div id="blogDetailLink"></div><pre id="blogDetailContent" class="detail-content"></pre></div></dialog>
+  <dialog id="sourceDialog"><form id="sourceForm" class="dialog-form">
+    <div class="dialog-head"><h2 id="sourceDialogTitle">编辑信息源</h2><button class="close" type="button" data-close="sourceDialog" aria-label="关闭">×</button></div>
+    <label>名称<input name="name" maxlength="160" required></label>
+    <label>网站网址<input name="url" type="url" required></label>
+    <label>RSS / Atom 地址 <small>可选，尚未验证</small><input name="feedUrl" type="url"></label>
+    <div class="source-form-grid"><label>来源类型<select name="type"><option value="blogger">个人博客</option><option value="company">公司 / 官方技术站</option><option value="news">新闻媒体</option></select></label><label>语言<select name="language"><option value="en">英文</option><option value="zh">中文</option><option value="other">其他</option></select></label></div>
+    <fieldset class="source-topics"><legend>关注领域（至少一项）</legend><label><input type="checkbox" name="topics" value="ai">AI</label><label><input type="checkbox" name="topics" value="game">游戏开发</label><label><input type="checkbox" name="topics" value="backend">服务端</label></fieldset>
+    <label>备注 / 入选理由<textarea name="notes" maxlength="4000" rows="3" placeholder="关注哪些内容、筛选偏好、需要注意什么…"></textarea></label>
+    <label class="source-check"><input type="checkbox" name="enabled">启用这个信息源</label>
+    <div class="dialog-actions"><button class="button outline" type="button" data-close="sourceDialog">取消</button><button class="button dark" type="submit">保存信息源</button></div>
+  </form></dialog>
+  <dialog id="entryDialog"><form id="entryForm" class="dialog-form"><div class="dialog-head"><div><div class="eyebrow muted">CAPTURE A THOUGHT</div><h2>添加知识</h2></div><button class="close" type="button" data-close="entryDialog">×</button></div><label>知识视角<select name="category"><option value="research">外部世界 · Research</option><option value="engineering">工程活动 · Engineering</option><option value="writing">思想演化 · Writing</option></select></label><label>标题<input name="title" maxlength="200" placeholder="给这条知识起个名字" required></label><label>内容<textarea name="content" rows="8" placeholder="粘贴资料、记录观察或写下想法…" required></textarea></label><label>来源 <small>可选</small><input name="source" placeholder="URL、书名或其他出处"></label><div class="dialog-actions"><button class="button outline" type="button" data-close="entryDialog">取消</button><button class="button dark" type="submit">保存到知识库</button></div></form></dialog>
+  <dialog id="importDialog"><form id="importForm" class="dialog-form"><div class="dialog-head"><div><div class="eyebrow muted">LOCAL IMPORT</div><h2>导入本地文件夹</h2></div><button class="close" type="button" data-close="importDialog">×</button></div><p class="dialog-copy">输入本机文件夹的绝对路径。支持 Markdown、纯文本及常见代码文件；再次导入同一路径会更新已有记录。</p><label>文件夹路径<input name="folder" placeholder="/Users/you/Notes" required></label><label>归入视角<select name="category"><option value="research">外部世界 · Research</option><option value="engineering">工程活动 · Engineering</option><option value="writing">思想演化 · Writing</option></select></label><div class="dialog-actions"><button class="button outline" type="button" data-close="importDialog">取消</button><button class="button dark" type="submit">导入资料</button></div></form></dialog>
+  <dialog id="detailDialog"><div class="dialog-form"><div class="dialog-head"><div><div id="detailCategory" class="eyebrow muted"></div><h2 id="detailTitle"></h2></div><button class="close" type="button" data-close="detailDialog">×</button></div><div id="detailMeta" class="detail-meta"></div><div id="detailSource" class="detail-source"></div><pre id="detailContent" class="detail-content"></pre><div class="dialog-actions"><button class="button danger" id="deleteItem">删除记录</button><button class="button dark" type="button" data-close="detailDialog">完成</button></div></div></dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "name": "banyanresearch",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test",
+    "cloud:dev": "wrangler dev",
+    "cloud:check": "wrangler deploy --dry-run",
+    "cloud:deploy": "wrangler deploy"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^5.11.2"
+  },
+  "devDependencies": {
+    "wrangler": "^4.147.0"
+  },
+  "overrides": {
+    "sharp": "^0.35.5"
+  },
+  "imports": {
+    "#analysis-provider": "./lib/providers.js",
+    "#knowledge-store": "./lib/store.js",
+    "#network": "./lib/network.js"
+  }
+}

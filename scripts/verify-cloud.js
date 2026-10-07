@@ -1,0 +1,16 @@
+import fs from 'node:fs/promises';
+import assert from 'node:assert/strict';
+const base='https://personal-intelligence-system.dean-winston.workers.dev';
+const root=new URL('../',import.meta.url);
+const local=JSON.parse(await fs.readFile(new URL('.data/knowledge.json',root),'utf8'));
+const password=(await fs.readFile(new URL('.data/cloud-admin-password.txt',root),'utf8')).trim();
+const call=(path,options={})=>fetch(base+path,{signal:AbortSignal.timeout(30000),...options});
+assert.equal((await call('/')).status,200);
+assert.equal((await call('/api/state')).status,401);
+const login=await call('/api/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password})});assert.equal(login.status,200);
+const cookie=login.headers.get('set-cookie').split(';')[0];
+const response=await call('/api/state',{headers:{cookie}});assert.equal(response.status,200);
+const state=await response.json();
+for(const key of ['sources','articles','blogs','repositories','recommendations','questions'])assert.equal(state[key].length,local[key].length,key+' migration count');
+assert.equal(state.runtime.deployment,'cloud');assert.equal(state.agentSettings.enabled,false);
+console.log('Live site passed: HTML, unauthenticated denial, login, cloud D1 data counts, Agents disabled.');
