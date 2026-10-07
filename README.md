@@ -214,7 +214,7 @@ Unreal 官方 Atom 响应会在完整 XML 后附加浏览器脚本：解析器�
 - 推送到 `main`：测试通过后自动发布到现有 Cloudflare Worker，检查网页及私有接口的登录保护。
 - GitHub Actions 的 `Test and deploy` 页面支持手动 Run workflow（选择 `main`）。发布串行执行，避免中断正在进行的部署。
 - GitHub Repository Settings → Secrets and variables → Actions：设置 Secret `CLOUDFLARE_API_TOKEN` 和 Variable `CLOUDFLARE_ACCOUNT_ID`。
-- 部署令牌限制到本项目所在 Cloudflare 账号，需 Workers Scripts Edit、D1 Read（绑定已有数据库）、Workers Workflows Edit 等部署所需权限；以 Cloudflare 当前令牌页面及发布错误提示为准。不要把个人 OAuth/refresh token 放进 CI。
+- 部署令牌限制到本项目所在 Cloudflare 账号，需 Account → Workers Scripts → Edit（包含 Workflows 发布）、Account → D1 → Read（绑定已有数据库）、Account → Account Settings → Read。不要把个人 OAuth/refresh token 放进 CI。
 - 模型密钥、后台密码与会话密钥继续使用 Cloudflare Secrets，不需要复制进 GitHub。发布只更新应用，不导入、清空或重建 D1 资料。
 - 需要回退代码时，在 GitHub revert 相应提交并合入 `main`，由同一流程重新发布。代码回退不会回退数据库内容。
 
