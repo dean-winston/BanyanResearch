@@ -205,3 +205,17 @@ DNS 和网页请求统一使用 Workers 支持的 `redirect: 'manual'`，显式�
 Unreal 官方 Atom 响应会在完整 XML 后附加浏览器脚本：解析器只丢弃根元素后的完整 script 元素，随后仍严格校验 XML；不执行脚本，不允许 DTD 或外部实体。新增回归测试覆盖该兼容情况及畸形 XML 拒绝，66项测试通过。AWS Builders Library 暂未找到可用官方订阅/API，保留原来源并在后台备注现状，未以其他 AWS 博客冒充它。
 
 线上验证结果：任务 `4d855bb9-e936-4748-9eca-369ac0b6969a` 通过 OpenAI 和 InfoQ 官方订阅新增6篇文章，任务部分成功。进一步无模型调用的单源检查确认：Netflix 官方订阅云端返回429，Medium官方入口同样跳转至该订阅；Unreal官方订阅跳转登录页后403；Game Developer官方RSS403。不要将“找到官方订阅”标记为“云端可用”。已把这些区别写入来源备注，并保留订阅错误及网页回退错误。新增经过登录校验的 `POST /api/sources/:id/check` 云端检查接口，仅发现元数据并更新来源检查状态，不调用模型或保存正文。来源地址在检查过程中被修改时，不回写旧地址的检查状态。
+
+## GitHub 版本维护与自动发布
+
+工作流：`.github/workflows/cloudflare.yml`。
+
+- PR 到 `main`：安装锁定依赖，运行测试并检查 Worker 构建，不发布。
+- 推送到 `main`：测试通过后自动发布到现有 Cloudflare Worker，检查网页及私有接口的登录保护。
+- GitHub Actions 的 `Test and deploy` 页面支持手动 Run workflow（选择 `main`）。发布串行执行，避免中断正在进行的部署。
+- GitHub Repository Settings → Secrets and variables → Actions：设置 Secret `CLOUDFLARE_API_TOKEN` 和 Variable `CLOUDFLARE_ACCOUNT_ID`。
+- 部署令牌限制到本项目所在 Cloudflare 账号，需 Workers Scripts Edit、D1 Read（绑定已有数据库）、Workers Workflows Edit 等部署所需权限；以 Cloudflare 当前令牌页面及发布错误提示为准。不要把个人 OAuth/refresh token 放进 CI。
+- 模型密钥、后台密码与会话密钥继续使用 Cloudflare Secrets，不需要复制进 GitHub。发布只更新应用，不导入、清空或重建 D1 资料。
+- 需要回退代码时，在 GitHub revert 相应提交并合入 `main`，由同一流程重新发布。代码回退不会回退数据库内容。
+
+自动发布首次运行仍需配置部署令牌，以 Actions 中实际部署成功为准。
