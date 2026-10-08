@@ -25,10 +25,14 @@ export class IntelligenceTasks extends WorkerEntrypoint {
           if(!feeds.has(source.id))feeds.set(source.id,await collectSource(source,{limit:context.settings.sourceArticleLimit,sinceDays:context.settings.collectionSinceDays,expand:false}));
           article.excerpt=feeds.get(source.id).articles.find(a=>a.url.replace(/\/$/,'')===article.url)?.excerpt||'';
         }
-        if((article.excerpt||'').length<350)try{const extracted=extractArticle(await fetchText(article.url,{timeoutMs:15000}));if(extracted.excerpt.length>(article.excerpt||'').length)article.excerpt=extracted.excerpt;}catch{/* Thin evidence is explicitly handled by the analyzer prompt. */}
+        article.readingScope='feed_summary';
+        try{const extracted=extractArticle(await fetchText(article.url,{timeoutMs:15000}));if(extracted.excerpt.length){article.excerpt=extracted.excerpt;article.readingScope='original_excerpt';}}catch(error){article.readingError=String(error.message||error).slice(0,300);}
+      }else{
+        article.readingScope='saved_summary';
       }
       enriched.push(article);
     }
-    return analyzeArticles(enriched,context);
+    const analyses=await analyzeArticles(enriched,context);
+    return analyses.map(analysis=>({...analysis,readingScope:enriched.find(item=>item.id===analysis.id)?.readingScope}));
   }
 }

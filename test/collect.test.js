@@ -81,3 +81,27 @@ test('failed official feed retains its own error when homepage fallback also fai
  const result=await collectSource({url:'https://example.com/',feedUrl:'https://example.com/feed'}, {fetcher:async url=>{throw new Error(url.endsWith('/feed')?'HTTP 429: official feed':'HTTP 403: homepage');}});
  assert.equal(result.status,'error');assert.match(result.error,/429.*official feed/);assert.match(result.error,/403.*homepage/);
 });
+
+test('opens original even with a long feed summary and rejects future dates',async()=>{
+ const source={id:'source',name:'Fixture',url:'https://example.com/',feedUrl:'https://example.com/feed'};
+ const calls=[];
+ const result=await collectSource(source,{fetcher:async url=>{
+  calls.push(url);
+  if(url===source.feedUrl)return `<rss><channel><item><title>Technical article</title><link>https://example.com/new</link><description>${'Feed summary '.repeat(80)}</description></item><item><title>Future article</title><link>https://example.com/future</link><pubDate>2999-01-01</pubDate></item></channel></rss>`;
+  return `<article>${'Original technical evidence '.repeat(20)}</article>`;
+ }});
+ assert.equal(result.articles.length,1);
+ assert(calls.includes('https://example.com/new'));
+ assert.equal(result.articles[0].readingScope,'original_excerpt');
+ assert.match(result.articles[0].excerpt,/Original technical evidence/);
+ assert(!calls.includes('https://example.com/future'));
+});
+
+test('original access failure is explicit rather than pretending full reading',async()=>{
+ const result=await collectSource({url:'https://example.com/',feedUrl:'https://example.com/feed'},{fetcher:async url=>{
+  if(url.endsWith('/feed'))return '<rss><channel><item><title>Technical article</title><link>https://example.com/new</link><description>Only a summary</description></item></channel></rss>';
+  throw new Error('HTTP 403');
+ }});
+ assert.equal(result.articles[0].readingScope,'feed_summary');
+ assert.match(result.articles[0].readingError,/403/);
+});
