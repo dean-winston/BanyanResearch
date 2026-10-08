@@ -31,7 +31,10 @@ export async function oauth(request,env,store){
   if(request.method==='GET'){
    const nonce=random();const logged=await authenticated(request,env);
    const html=`<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/styles.css"><title>连接 dots · BanyanResearch</title><body><main class="login-screen"><form method="post" class="login-card"><h1>将榕树连接到 ChatGPT / dots</h1><p>允许读取你的文章、博客、项目摘要、研究问题与反馈。${requested.includes('research:write')?'允许领取研究任务、保存推荐、修改研究问题及阅读反馈。':''}</p><p>不会授予修改登录密码、读取模型密钥或删除数据库的权限。你可在“持续助手”页面断开授权。</p><input type="hidden" name="nonce" value="${nonce}">${logged?'': '<label>榕树访问密码<input name="password" type="password" autocomplete="current-password" required></label>'}<button class="button dark" name="decision" value="allow">授权连接</button><button class="button outline" name="decision" value="deny">取消</button></form></main></body></html>`;
-   return new Response(html,{headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','Content-Security-Policy':"default-src 'none'; style-src 'self'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",'Referrer-Policy':'no-referrer','Set-Cookie':`__Host-banyan_oauth=${nonce}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`}});
+   // no-referrer makes browser form POSTs send Origin: null. Keep same-origin
+   // provenance for consent, while suppressing referrers on the OAuth redirect.
+   // Chromium also checks form-action on redirects, so permit the validated host.
+   return new Response(html,{headers:{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','Content-Security-Policy':"default-src 'none'; style-src 'self'; form-action 'self' https://chatgpt.com; frame-ancestors 'none'; base-uri 'none'",'Referrer-Policy':'same-origin','Set-Cookie':`__Host-banyan_oauth=${nonce}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=600`}});
   }
   if(request.headers.get('Origin')!==origin)fail('授权来源无效',403);
   const form=new URLSearchParams(await limitedBody(request,10000));const cookie=request.headers.get('Cookie')?.match(/(?:^|;\s*)__Host-banyan_oauth=([a-f0-9]{64})(?:;|$)/)?.[1];if(!cookie||!await equalSecrets(cookie,form.get('nonce')||''))fail('授权页面已失效，请重新打开',403);
@@ -46,7 +49,7 @@ export async function oauth(request,env,store){
    const code=random(),digest=await hash(code);
    await store.updateStore(s=>auth(s).codes.push({hash:digest,clientId:client.client_id,redirect:p.get('redirect_uri'),challenge:p.get('code_challenge'),resource,scopes:requested,expiresAt:Date.now()+5*60000}));destination.searchParams.set('code',code);
   }
-  return new Response(null,{status:303,headers:{Location:destination.href,'Cache-Control':'no-store','Set-Cookie':'__Host-banyan_oauth=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'}});
+  return new Response(null,{status:303,headers:{Location:destination.href,'Cache-Control':'no-store','Referrer-Policy':'no-referrer','Set-Cookie':'__Host-banyan_oauth=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0'}});
  }
  if(path==='/oauth/token'&&request.method==='POST'){
   const p=new URLSearchParams(await limitedBody(request,12000)),grant=p.get('grant_type');

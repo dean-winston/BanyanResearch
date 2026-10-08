@@ -11,9 +11,9 @@ const verifier='v'.repeat(64),proof=createHash('sha256').update(verifier).digest
 async function setup(store,scope='research:read research:write'){
  const r=await oauth(jsonRequest('/oauth/register',{redirect_uris:['https://chatgpt.com/connector_platform_oauth_redirect'],token_endpoint_auth_method:'none'}),env,store);assert.equal(r.status,201);const c=await r.json();
  const q=new URLSearchParams({client_id:c.client_id,redirect_uri:c.redirect_uris[0],response_type:'code',code_challenge:proof,code_challenge_method:'S256',resource:base+'/mcp',scope,state:'state-test'});const path='/oauth/authorize?'+q;
- const page=await oauth(new Request(base+path),env,store);assert.equal(page.status,200);const html=await page.text(),nonce=html.match(/name="nonce" value="([a-f0-9]+)"/)[1];
+ const page=await oauth(new Request(base+path),env,store);assert.equal(page.status,200);assert.equal(page.headers.get('Referrer-Policy'),'same-origin');assert.match(page.headers.get('Content-Security-Policy'),/form-action 'self' https:\/\/chatgpt.com;/);const html=await page.text(),nonce=html.match(/name="nonce" value="([a-f0-9]+)"/)[1];
  const consent=()=>new Request(base+path,{method:'POST',headers:{Origin:base,Cookie:'__Host-banyan_oauth='+nonce,'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({nonce,password:env.ADMIN_PASSWORD,decision:'allow'})});
- const approved=await oauth(consent(),env,store);assert.equal(approved.status,303);const callback=new URL(approved.headers.get('Location'));assert.equal(callback.searchParams.get('iss'),base);assert.equal(callback.searchParams.get('state'),'state-test');
+ const approved=await oauth(consent(),env,store);assert.equal(approved.status,303);assert.equal(approved.headers.get('Referrer-Policy'),'no-referrer');const callback=new URL(approved.headers.get('Location'));assert.equal(callback.searchParams.get('iss'),base);assert.equal(callback.searchParams.get('state'),'state-test');
  return {clientId:c.client_id,code:callback.searchParams.get('code'),redirect:c.redirect_uris[0],consent};
 }
 const exchange=(store,d,overrides={})=>oauth(new Request(base+'/oauth/token',{method:'POST',body:new URLSearchParams({client_id:d.clientId,grant_type:'authorization_code',code:d.code,code_verifier:verifier,redirect_uri:d.redirect,resource:base+'/mcp',...overrides})}),env,store);
@@ -44,4 +44,16 @@ test('MCP write tools complete a batch once and preserve source evidence',async(
  const batch=await call('claim_research',{requestId:'real-protocol-test'});
  const args={batchId:batch.id,leaseToken:batch.leaseToken,results:[{id:'fixture-article',summary:'Short assessment',topics:['ai'],problem:'Problem',method:'Method',conclusion:'Conclusion',rationale:'Useful engineering evidence',technicalGain:'Reproducible approach',evidence:'Author reports a small benchmark',limitations:'Not independently verified',researchQuestion:'',qualityScore:80,eventKey:'fixture',recommend:true,readingScope:'original_excerpt',relations:[]}]};
  const first=await call('submit_research',args);assert.equal(first.recommended,1);assert.deepEqual(await call('submit_research',args),first);const saved=await s.readStore();assert.equal(saved.recommendations.length,1);assert.equal(saved.recommendations[0].url,'https://example.com/paper');
+});
+
+// The browser-facing policy must preserve Origin; never relax the consent guard.
+test('consent still rejects null/missing/foreign Origin and wrong nonce with valid cookies',async()=>{
+ const s=makeStore(),d=await setup(s);
+ for(const origin of [null,'null','https://evil.example']){
+  const req=d.consent(),headers=new Headers(req.headers);
+  if(origin===null)headers.delete('Origin');else headers.set('Origin',origin);
+  assert.equal((await oauth(new Request(req,{headers}),env,s)).status,403);
+ }
+ const req=d.consent(),form=new URLSearchParams(await req.text());form.set('nonce','wrong');
+ assert.equal((await oauth(new Request(req.url,{method:'POST',headers:req.headers,body:form}),env,s)).status,403);
 });
