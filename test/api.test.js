@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {spawn} from 'node:child_process';
-import {mkdtemp,rm} from 'node:fs/promises';
+import {mkdtemp,rm,readFile,writeFile} from 'node:fs/promises';
 import os from 'node:os';
 import http from 'node:http';
 import {migrate} from '../lib/state.js';
@@ -26,4 +26,34 @@ test('API source/questions/settings preserve edits across restart; rejects bad i
  assert.equal((await request('/api/jobs','POST',{type:'daily'},{Origin:'https://evil.example'})).status,403);
  assert.equal((await request('/api/state','GET',undefined,{Host:'evil.example'})).status,403);
  await stop();await start();state=(await request('/api/state')).data;assert.equal(state.sources[0].notes,'编辑后的备注');assert.equal(state.sources[0].enabled,false);assert.equal(state.questions[0].status,'resolved');assert.equal(state.settings.maxArticlesPerRun,2);assert.equal(state.settings.sourceArticleLimit,8);assert.equal(state.settings.collectionSinceDays,60);
+});
+
+test('recommendation feedback reasons persist through the local API and invalid reasons do not mutate',async()=>{
+ const filename=dir+'/knowledge.json';
+ const state=JSON.parse(await readFile(filename,'utf8'));
+ state.recommendations.push({id:'reason-fixture',title:'Fixture',feedback:'new'});
+ await writeFile(filename,JSON.stringify(state));
+ const invalid=await request('/api/recommendations/reason-fixture','PATCH',{feedback:'irrelevant',feedbackReason:'unsupported'});
+ assert.equal(invalid.status,400);
+ assert.equal((await request('/api/state')).data.recommendations.find(item=>item.id==='reason-fixture').feedback,'new');
+ const saved=await request('/api/recommendations/reason-fixture','PATCH',{feedback:'irrelevant',feedbackReason:'depth'});
+ assert.equal(saved.status,200);
+ assert.equal(saved.data.feedbackReason,'depth');
+ await stop();await start();
+ assert.equal((await request('/api/state')).data.recommendations.find(item=>item.id==='reason-fixture').feedbackReason,'depth');
+ const reset=await request('/api/recommendations/reason-fixture','PATCH',{feedback:'new'});
+ assert.equal(reset.data.feedbackReason,'');
+});
+
+test('reading decision page serves new modules and stylesheet with correct content types',async()=>{
+ const index=await fetch('http://127.0.0.1:'+port+'/');
+ const html=await index.text();
+ assert.match(html,/id="recommendHistory"/);
+ assert.match(html,/href="\/reading.css"/);
+ assert.equal((html.match(/id="readingDigest"/g)||[]).length,1);
+ for(const [filename,type] of [['reading-view.js','text/javascript'],['digest.js','text/javascript'],['reading.css','text/css']]){
+  const response=await fetch('http://127.0.0.1:'+port+'/'+filename);
+  assert.equal(response.status,200);
+  assert(response.headers.get('content-type').includes(type));
+ }
 });

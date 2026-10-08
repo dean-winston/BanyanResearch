@@ -1,4 +1,5 @@
 import {applySettings,claimAgentCheck} from './lib/settings.js';
+import {applyRecommendationFeedback} from './lib/feedback.js';
 import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -196,7 +197,7 @@ const server = http.createServer(async (request, response) => {
     if (request.method === 'PATCH' && url.pathname.startsWith('/api/recommendations/')) {
       const input = await body(request), id = decodeURIComponent(url.pathname.split('/').pop());
       if (!['new','useful','irrelevant','known','later'].includes(input.feedback)) throw Object.assign(new Error('反馈类型无效'),{status:400});
-      const result = await updateStore(s => {const r=s.recommendations.find(r=>r.id===id);if(!r)throw Object.assign(new Error('推荐不存在'),{status:404});r.feedback=input.feedback;r.feedbackAt=new Date().toISOString();return r;});
+      const result = await updateStore(store => applyRecommendationFeedback(store,id,input));
       return json(response,200,result);
     }
     if ((request.method === 'POST' && url.pathname === '/api/questions') || (request.method === 'PATCH' && url.pathname.startsWith('/api/questions/'))) {

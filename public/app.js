@@ -1,4 +1,4 @@
-import {selectDigest,digestGroups} from './digest.js';
+import {renderReadingDecision,readingCard} from './reading-view.js';
 
 const labels = { research: '外部世界', engineering: '工程活动', writing: '思想演化' };
 const icons = { research: '⌕', engineering: '⌘', writing: '✎' };
@@ -260,12 +260,13 @@ function collectionLabel(result) {
 function renderIntelligence() {
   const recommendations = state.recommendations || [], blogs = state.blogs || [], repos = state.repositories || [], jobs = state.jobs || [], questions = (state.questions || []).filter(q => !q.superseded);
   const query = $('#recommendSearch').value.trim().toLowerCase(), filter = $('#recommendFilter').value;
-  const digest = selectDigest(recommendations);
-  const digestEntry = item => `<article class="recommend-card"><div class="small-meta">${escapeHTML(item.sourceName || '')} · ${escapeHTML(item.sourceKind || '来源性质待核对')} · ${item.publishedAt ? escapeHTML(dateLabel(item.publishedAt)) : '发表日期未知'}</div><h3>${safeLink(item.url,item.title)}</h3><p>${escapeHTML(item.summary || '')}</p><p>${escapeHTML(item.rationale || '')}</p><div class="small-meta">${item.readingScope === 'original_excerpt' ? '已打开原文，基于有限文本片段分析' : '仅基于摘要，未确认原文阅读'}</div></article>`;
-  $('#readingDigest').innerHTML = query || filter ? '' : digest.length ? `<section><h2>最新精选 · ${digest.length} 条</h2><p class="muted-copy">优先论文、模型原理与一手工程；不为凑数推荐。以下为最近入库日的精选，不代表完整覆盖。</p><h3>最值得先读：${safeLink(digest[0].url,digest[0].title)}</h3>${[...digestGroups,...(digest.some(item=>!digestGroups.some(([group])=>item.sourceGroup===group))?[[undefined,'其他研究与工程']]:[])].map(([group,label]) => `<h3>${label}</h3>${digest.filter(item => item.sourceGroup === group).map(digestEntry).join('') || '<p class="muted-copy">本轮暂无合格入选内容。</p>'}`).join('')}</section><h2>全部推荐与历史反馈</h2>` : '<p class="source-notice">暂无新口味精选。点击“立即更新”，或重新匹配历史文章；不强行凑条数。</p>';
-  const shown = recommendations.filter(r => (!filter || (r.feedback || 'new') === filter) && (!query || `${r.title} ${r.summary} ${r.rationale}`.toLowerCase().includes(query))).sort((a,b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
-  $('#recommendCount').textContent = `${shown.length} 条推荐 · ${recommendations.filter(r => !r.feedback || r.feedback === 'new').length} 条未处理`;
-  $('#recommendCards').innerHTML = shown.length ? shown.map(r => `<article class="recommend-card ${r.stale ? 'recommend-stale' : ''}"><div class="card-top"><span class="eyebrow muted">${escapeHTML(feedbackNames[r.feedback || 'new'] || '未处理')}</span><span class="small-meta">${r.createdAt ? dateLabel(r.createdAt) : ''}</span></div><h2>${safeLink(r.url,r.title)}</h2>${r.stale ? `<div class="review-notice">历史推荐 · ${escapeHTML(r.staleReason || '重新分析后未入选，保留供回顾')}</div>` : ''}<p>${escapeHTML(r.summary || '')}</p><div class="recommend-reason"><b>为什么值得读</b><p>${escapeHTML(r.rationale || '暂无推荐理由')}</p></div>${(r.relations || []).length ? `<div class="relations"><b>与你的研究关联</b>${r.relations.map(rel => `<div><span class="relation-kind">${({question:'研究问题',blog:'博客',repository:'项目'})[rel.kind] || '参考'}</span> ${safeLink(rel.url,rel.title) || escapeHTML(rel.title)}<p>${escapeHTML(rel.reason || '')}</p></div>`).join('')}</div>` : ''}<div class="small-meta">${modeLabel(r.analysisMode)}</div><div class="feedback-actions" aria-label="推荐反馈">${Object.entries(feedbackNames).filter(([value]) => value !== 'new').map(([value,label]) => `<button class="feedback-button ${(r.feedback === value) ? 'selected' : ''}" data-feedback="${value}" data-recommendation="${escapeHTML(r.id)}" aria-pressed="${r.feedback === value}">${label}</button>`).join('')}${r.feedback && r.feedback !== 'new' ? `<button class="plain-link" data-feedback="new" data-recommendation="${escapeHTML(r.id)}">撤销反馈</button>` : ''}</div></article>`).join('') : blank(query || filter ? '暂无符合筛选条件的推荐。' : '还没有推荐。添加一个研究问题，再点击“立即更新”，开始连接外部信息与你的研究。');
+  const {html,decision} = renderReadingDecision(state);
+  $('#readingDigest').innerHTML = html;
+  const featuredIds = new Set(decision.digest.map(item=>item.id));
+  const shown = decision.history.filter(item => (query || filter || !featuredIds.has(item.id)) && (!filter || (item.feedback || 'new') === filter) && (!query || [item.title,item.summary,item.rationale,item.technicalGain,item.evidence,item.limitations].join(' ').toLowerCase().includes(query))).sort((left,right) => (right.updatedAt || right.createdAt || '').localeCompare(left.updatedAt || left.createdAt || ''));
+  $('#recommendCount').textContent = '显示 '+shown.length+' 条 · 共保留 '+recommendations.length+' 条记录';
+  if(query || filter) $('#recommendHistory').open = true;
+  $('#recommendCards').innerHTML = shown.length ? shown.map(item=>readingCard(item,{history:true,sources:state.sources})).join('') : blank(query || filter ? '没有符合条件的记录。' : '其余阅读记录会保留在这里，不作为待办清单。');
   const articles = state.articles || [];
   $('#articleCount').textContent = `(${articles.length})`;
   $('#articleList').innerHTML = articles.length ? articles.slice().reverse().map(a => `<article class="article-row"><h3>${safeLink(a.url,a.title)}</h3><div class="small-meta">${escapeHTML(a.sourceName || '')}${a.publishedAt ? ' · ' + escapeHTML(dateLabel(a.publishedAt)) : ''}</div><p>${escapeHTML(a.summary || '')}</p>${tags(a.topics)}</article>`).join('') : blank('还没有采集到文章。');
@@ -306,6 +307,8 @@ function editQuestion(question) {
 for (const id of ['recommendSearch','recommendFilter','questionSearch']) $('#'+id).addEventListener('input',renderIntelligence);
 $('#newQuestion').addEventListener('click',() => editQuestion(null));
 document.addEventListener('click',async event => {
+  const navigation=event.target.closest('[data-reading-view]');
+  if(navigation)return showView(navigation.dataset.readingView);
   const run = event.target.closest('[data-job]');
   const feedback = event.target.closest('[data-feedback]');
   const question = event.target.closest('[data-edit-question]');
@@ -319,10 +322,20 @@ document.addEventListener('click',async event => {
   const button = run || feedback; button.disabled = true;
   try {
     if (run) { await api('/api/jobs',{method:'POST',body:JSON.stringify({type:run.dataset.job,...(run.dataset.repository ? {repositoryId:run.dataset.repository} : {})})}); toast('任务已开始，可在“更新与任务”查看进度'); }
-    else { await api('/api/recommendations/'+encodeURIComponent(feedback.dataset.recommendation),{method:'PATCH',body:JSON.stringify({feedback:feedback.dataset.feedback})}); toast('反馈已保存'); }
+    else { await api('/api/recommendations/'+encodeURIComponent(feedback.dataset.recommendation),{method:'PATCH',body:JSON.stringify({feedback:feedback.dataset.feedback,feedbackReason:feedback.closest('.reading-card')?.querySelector('[data-feedback-reason]')?.value||''})}); toast('反馈已保存'); }
     await refresh();
   } catch(error) { toast(error.message); }
   finally { button.disabled = false; }
+});
+document.addEventListener('change',async event => {
+  const select=event.target.closest('[data-feedback-reason]');
+  if(!select)return;
+  const recommendation=(state.recommendations||[]).find(item=>item.id===select.dataset.feedbackReason);
+  if(!recommendation||!recommendation.feedback||recommendation.feedback==='new'){toast('原因已选择，点击反馈按钮即可一起保存');return;}
+  select.disabled=true;
+  try{await api('/api/recommendations/'+encodeURIComponent(recommendation.id),{method:'PATCH',body:JSON.stringify({feedback:recommendation.feedback,feedbackReason:select.value})});await refresh();toast('反馈原因已保存');}
+  catch(error){select.value=recommendation.feedbackReason||'';toast(error.message);}
+  finally{select.disabled=false;}
 });
 $('#researchQuestionForm').addEventListener('submit',async event => {
   event.preventDefault(); const form = event.currentTarget, data = new FormData(form), button = form.querySelector('[type=submit]'); button.disabled = true;

@@ -6,6 +6,7 @@
   <meta name="application-name" content="BanyanResearch">
   <title>BanyanResearch</title>
   <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/reading.css">
 </head>
 <body>
   <section id="loginScreen" class="login-screen hidden"><form id="loginForm" class="login-card"><div class="eyebrow muted">BANYAN RESEARCH</div><h1>登录个人空间</h1><p>输入访问密码，查看你的研究与推荐。</p><label for="loginPassword">访问密码</label><input id="loginPassword" name="password" type="password" autocomplete="current-password" required><p id="loginError" class="error-notice hidden" role="alert"></p><button class="button dark" type="submit">登录</button></form></section>
@@ -76,11 +77,13 @@
       </section>
 
       <section id="inbox" class="view active">
-        <div class="page-heading"><div class="eyebrow muted">CONNECTED TO YOUR WORK</div><h1>为你推荐</h1><p>从外部世界，找到与你的研究和实践有关的新线索。</p></div>
-        <div class="toolbar"><div class="search-wrap"><span>⌕</span><input id="recommendSearch" type="search" aria-label="搜索推荐" placeholder="搜索文章、推荐理由…"></div><button class="button dark" data-job="daily">↻ 立即更新</button></div>
+        <div class="page-heading"><div class="eyebrow muted">LESS NOISE, MORE INSIGHT</div><h1>为你推荐</h1><p>先决定什么值得读，再理解技术增量、证据和边界。不是另一份待办清单。</p></div>
+        <div id="runningNotice" class="source-notice hidden" role="status"></div><div id="readingDigest" aria-live="polite"></div>
+        <details id="recommendHistory" class="reading-history"><summary>历史推荐与反馈 <span class="small-meta">保留积累，不催你清空</span></summary>
+        <div class="toolbar"><div class="search-wrap"><span>⌕</span><input id="recommendSearch" type="search" aria-label="搜索推荐" placeholder="搜索历史文章、方法、证据…"></div></div>
         <div class="source-filters"><select id="recommendFilter" aria-label="推荐状态"><option value="">全部推荐</option><option value="new">未处理</option><option value="useful">有用</option><option value="later">稍后看</option><option value="known">已了解</option><option value="irrelevant">不相关</option></select><span id="recommendCount"></span></div>
-        <div id="runningNotice" class="source-notice hidden" role="status"></div><div id="readingDigest"></div><div id="recommendCards" class="recommend-cards"></div>
-        <details class="collected-panel"><summary>已收集的文章 <span id="articleCount"></span></summary><p class="muted-copy">包括尚未形成推荐的文章。先更新博客或维护研究问题，帮助系统找到联系。</p><div id="articleList"></div></details>
+        <div id="recommendCards" class="recommend-cards"></div></details>
+        <details class="collected-panel"><summary>采集资料库 <span id="articleCount"></span></summary><p class="muted-copy">包括未入选资料；有明确技术价值即可入选，个人研究关联只是加分项。</p><div id="articleList"></div></details>
       </section>
       <section id="profile" class="view">
         <div class="page-heading"><div class="eyebrow muted">YOUR THINKING & PRACTICE</div><h1>我的研究</h1><p>博客保留完整文章，项目观点附上代码依据，供你核对。</p></div>

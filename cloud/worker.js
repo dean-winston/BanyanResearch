@@ -1,4 +1,5 @@
 import {applySettings,claimAgentCheck} from '../lib/settings.js';
+import {applyRecommendationFeedback} from '../lib/feedback.js';
 export {IntelligenceTasks} from './task-service.js';
 import {WorkflowEntrypoint} from 'cloudflare:workers';
 import {readStore,updateStore,initializeStore} from './runtime-store.js';
@@ -85,7 +86,7 @@ async function api(request,env,url){
  }
  if(request.method==='PATCH'&&url.pathname.startsWith('/api/recommendations/')){
   if(!['new','useful','irrelevant','known','later'].includes(data.feedback))fail('反馈无效');
-  return response(await updateStore(s=>{const r=s.recommendations.find(r=>r.id===id);if(!r)fail('推荐不存在',404);r.feedback=data.feedback;r.feedbackAt=new Date().toISOString();return r;}));
+  return response(await updateStore(store=>applyRecommendationFeedback(store,id,data)));
  }
  if((request.method==='POST'&&url.pathname==='/api/sources')||(request.method==='PATCH'&&url.pathname.startsWith('/api/sources/'))){
   return response(await updateStore(s=>{const old=request.method==='PATCH'?s.sources.find(v=>v.id===id):null;if(request.method==='PATCH'&&!old)fail('信息源不存在',404);const d={...old,...data};if(!text(d.name,160)||!['blogger','company','news'].includes(d.type)||!Array.isArray(d.topics)||!d.topics.length||d.topics.some(t=>!['ai','game','backend'].includes(t))||!['en','zh','other'].includes(d.language)||typeof d.enabled!=='boolean')fail('信息源字段无效');const link=webUrl(d.url);if(s.sources.some(v=>v.id!==old?.id&&v.url.replace(/\/$/,'')===link.replace(/\/$/,'')))fail('网址已经存在');const result={...old,id:old?.id||crypto.randomUUID(),name:text(d.name,160),url:link,feedUrl:webUrl(d.feedUrl,true),type:d.type,topics:[...new Set(d.topics)],language:d.language,notes:text(d.notes,4000),enabled:d.enabled,updatedAt:new Date().toISOString()};const changedUrl=old&&(old.url!==result.url||old.feedUrl!==result.feedUrl);if(!old||changedUrl){result.verification='待验证';result.checkedAt='';result.httpStatus='';}if(old){Object.assign(old,result);if(changedUrl)for(const r of s.recommendations){if(s.articles.find(a=>a.id===r.articleId)?.sourceId===old.id){r.stale=true;r.staleReason='信息源网址已修改，原有推荐待复核';}}}else s.sources.unshift(result);return result;}),request.method==='POST'?201:200);
