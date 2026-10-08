@@ -1,3 +1,6 @@
+import {oauth} from './mcp-auth.js';
+import {mcp} from './mcp.js';
+import {configureDots,dotsStatus,initDots} from '../lib/dots.js';
 import {applySettings,claimAgentCheck} from '../lib/settings.js';
 import {applyRecommendationFeedback} from '../lib/feedback.js';
 export {IntelligenceTasks} from './task-service.js';
@@ -22,6 +25,7 @@ export class IntelligenceWorkflow extends WorkflowEntrypoint{
   if(!acquired){await step.do('record busy',()=>updateStore(s=>{const j=s.jobs.find(j=>j.id===event.payload.jobId);if(j){j.status='failed';j.message='其他工作流仍在执行，请完成后重试';j.finishedAt=new Date().toISOString();}}));return {status:'busy'};}
   try{
    if(event.payload.type==='agents'){
+    if((await readStore()).dotsSettings?.mode==='dots')return {status:'paused'};
     for(const agentId of ['writing','research']){
      const decision=await step.do('plan-'+agentId,{retries:{limit:0,delay:'1 second',backoff:'constant'},timeout:'5 minutes'},()=>planAgent(agentId,workflowId));
      if(!decision)continue;
@@ -58,8 +62,10 @@ async function api(request,env,url){
  if(!await authenticated(request,env))return response({error:'请先登录'},401);
  if(url.pathname==='/api/logout'&&request.method==='POST')return response({ok:true},200,{'Set-Cookie':'pis_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0; Secure'});
  const runtime={...await runtimeStatus(),deployment:'cloud'};
- if(request.method==='GET'&&url.pathname==='/api/state'){const store=await readStore();const {loginAttempts,workflowLease,...visible}=store;return response({...visible,items:knowledgeItems(store),runtime,modelEnabled:runtime.available});}
+ if(request.method==='GET'&&url.pathname==='/api/state'){const store=await readStore();const {loginAttempts,workflowLease,mcpAuth,dotsBatches,dotsQueue,...visible}=store;return response({...visible,dots:dotsStatus(store),items:knowledgeItems(store),runtime,modelEnabled:runtime.available});}
  const data=request.method==='GET'?{}:await input(request),id=decodeURIComponent(url.pathname.split('/').pop());
+ if(url.pathname==='/api/dots/settings'&&request.method==='PATCH')return response(await updateStore(s=>configureDots(s,data)));
+ if(url.pathname==='/api/dots/revoke'&&request.method==='POST'){await updateStore(s=>{s.mcpAuth={clients:[],codes:[],tokens:[]};});return response({ok:true});}
  const sourceCheck=/^\/api\/sources\/([^/]+)\/check$/.exec(url.pathname);
  if(request.method==='POST'&&sourceCheck){
   const sourceId=decodeURIComponent(sourceCheck[1]),store=await readStore(),source=store.sources.find(s=>s.id===sourceId);if(!source)fail('信息源不存在',404);
@@ -69,13 +75,15 @@ async function api(request,env,url){
   return response({status:result.status,count:result.articles.length,error:result.error||''});
  }
  if(request.method==='POST'&&url.pathname==='/api/jobs'){
-  if(!runtime.available)fail(runtime.error||'请先配置云端模型',503);
+  const dotsMode=(await readStore()).dotsSettings?.mode==='dots';
+  if(!runtime.available&&!(dotsMode&&['daily','collect','blog'].includes(data.type)))fail(runtime.error||'请先配置云端模型',503);
   const job=await makeDurableJob(data.type,undefined,data.repositoryId);
   try{await startWorkflow(env,{type:'job',jobId:job.id},job.id);}catch{await updateStore(s=>{const j=s.jobs.find(j=>j.id===job.id);j.status='failed';j.message='工作流创建失败，请重试';});fail('工作流创建失败',502);}return response(job,202);
  }
  if(request.method==='PATCH'&&url.pathname==='/api/agent-settings')return response(await changeAgentSettings(data));
  if(request.method==='PATCH'&&url.pathname.startsWith('/api/agents/'))return response(await changeAgent(id,data));
  if(request.method==='POST'&&url.pathname==='/api/agents/wake'){
+  if((await readStore()).dotsSettings?.mode==='dots')fail('dots 模式请在 dots 中运行研究任务');
   if(!runtime.available)fail(runtime.error||'请先配置云端模型',503);
   if(!(await readStore()).agentSettings.enabled)fail('请先启用持续 Agent');
   return response(await startWorkflow(env,{type:'agents'}),202);
@@ -110,8 +118,14 @@ async function api(request,env,url){
  return response({error:'未找到接口'},404);
 }
 export default {
- async fetch(request,env){const url=new URL(request.url);try{if(url.pathname.startsWith('/api/'))return await api(request,env,url);return await env.ASSETS.fetch(request);}catch(error){const safeModel=/^(云端分析|无法连接云端分析服务|分析输入超过长度限制|请配置 DEEPSEEK_API_KEY|请明确配置 DEEPSEEK_MODEL)/.test(error.message||'');if(!error.status)console.error('Worker request failed',{name:error.name,...(safeModel?{message:error.message}:{})});return response({error:error.status||safeModel?error.message:'云端处理失败，请查看部署日志'},error.status||(safeModel?502:500));}},
- async scheduled(event,env){await initializeStore();const s=await readStore();if(!(await runtimeStatus()).available||s.workflowLease?.expiresAt>Date.now())return;
+ async fetch(request,env){const url=new URL(request.url);try{if(url.pathname==='/mcp')return await mcp(request,{readStore,updateStore});if(url.pathname.startsWith('/oauth/')||url.pathname.startsWith('/.well-known/'))return await oauth(request,env,{readStore,updateStore});if(url.pathname.startsWith('/api/'))return await api(request,env,url);return await env.ASSETS.fetch(request);}catch(error){const safeModel=/^(云端分析|无法连接云端分析服务|分析输入超过长度限制|请配置 DEEPSEEK_API_KEY|请明确配置 DEEPSEEK_MODEL)/.test(error.message||'');if(!error.status)console.error('Worker request failed',{name:error.name,...(safeModel?{message:error.message}:{})});return response({error:error.status||safeModel?error.message:'云端处理失败，请查看部署日志'},error.status||(safeModel?502:500));}},
+ async scheduled(event,env){await initializeStore();const s=initDots(await readStore());if(s.workflowLease?.expiresAt>Date.now())return;
+  if(s.dotsSettings.mode==='dots'){
+   if(!s.dotsSettings.collectionEnabled||Date.now()-Date.parse(s.dotsSettings.lastCollectionAt||'1970-01-01')<s.dotsSettings.collectionIntervalHours*3600000)return;
+   const id='dots-collection-'+Math.floor(event.scheduledTime/3600000),job=await makeDurableJob('daily',id);
+   try{await startWorkflow(env,{type:'job',jobId:job.id},id);await updateStore(s=>{initDots(s);s.dotsSettings.lastCollectionAt=new Date().toISOString();});}catch(error){if(!/already exists|duplicate/i.test(error.message))throw error;}return;
+  }
+  if(!(await runtimeStatus()).available)return;
   if(s.agentSettings.enabled){if(!await updateStore(s=>claimAgentCheck(s,event.scheduledTime)))return;const id='agents-'+Math.floor(event.scheduledTime/3600000);try{await startWorkflow(env,{type:'agents'},id);}catch(error){if(!/already exists|duplicate/i.test(error.message))throw error;}}
   // Legacy daily timer does not run in parallel with continuous Agents.
   else if(s.settings.dailyEnabled&&env.ENABLE_LEGACY_DAILY==='true'&&Date.now()-Date.parse(s.settings.lastDailyAt||0)>=86400000){const job=await makeDurableJob('daily');await updateStore(s=>{s.settings.lastDailyAt=new Date().toISOString();});await startWorkflow(env,{type:'job',jobId:job.id},job.id);}

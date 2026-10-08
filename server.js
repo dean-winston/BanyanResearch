@@ -176,7 +176,8 @@ const server = http.createServer(async (request, response) => {
     }
     if (request.method === 'GET'  && url.pathname === '/api/state') {
       const store = await readStore();
-      return json(response, 200, { ...store, items: knowledgeItems(store), runtime, modelEnabled: runtime.available });
+      const {mcpAuth,dotsBatches,dotsQueue,...visible}=store;
+      return json(response, 200, { ...visible, items: knowledgeItems(store), runtime, modelEnabled: runtime.available });
     }
     if (request.method === 'PATCH' && url.pathname === '/api/agent-settings') {
       return json(response, 200, await changeAgentSettings(await body(request)));

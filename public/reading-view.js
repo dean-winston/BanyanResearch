@@ -12,7 +12,7 @@ function feedback(item) {
 
 export function readingCard(item, {featured=false,history=false,sources=[]} = {}) {
   const disabled=sourceFor(item,sources)?.enabled===false;
-  const scope=item.readingScope==='original_excerpt'?'基于原文片段，非全文核验':item.readingScope==='saved_summary'?'基于已保存摘要，未重新核验原文':'原文阅读未确认，仅供线索参考';
+  const scope=item.readingScope==='original_full'?'dots 声明已阅读原文，结论仍需核验':item.readingScope==='original_excerpt'?'基于原文片段，非全文核验':item.readingScope==='saved_summary'?'基于已保存摘要，未重新核验原文':'原文阅读未确认，仅供线索参考';
   const technicalGain=item.technicalGain||item.method||'尚未提炼具体方法；需进一步核对原文。';
   const evidence=item.evidence||'未单独记录实验证据；不据此认定结论已验证。';
   const limitations=item.limitations||'适用条件和局限尚未提炼，请结合原文判断。';
@@ -21,8 +21,8 @@ export function readingCard(item, {featured=false,history=false,sources=[]} = {}
 
 export function renderReadingDecision(store) {
   const decision=readingDecision(store);
-  const titles={running:'正在形成本轮阅读判断',failed:'本轮更新未完成，不能据此判断没有好内容',partial:'本轮覆盖不完整，先看已确认的内容',ready:`本轮值得读 ${decision.digest.length} 条，先读这一篇`,empty:'本轮暂不推荐：没有新的合格入选内容',needs_analysis:'历史推荐尚未按当前阅读标准整理',not_started:'还没有形成阅读判断'};
-  const descriptions={running:'任务完成后再形成精选，不把旧推荐当成本轮结果。',failed:'请查看任务错误并重试，历史记录仍然保留。',partial:'部分来源或分析失败。下面只是已完成部分，不代表完整覆盖。',ready:'按技术价值排序，最多保留 5 条；不是必须清空的待办清单。',empty:'可能没有新候选，或候选未达到推荐标准。不为凑数推荐。',needs_analysis:'可用现有摘要重新整理；不会声称重新读过原文。',not_started:'采集并分析后，给出首选、阅读收益与证据边界。'};
+  const titles={awaiting_dots:'新线索已准备好，等待 dots 研究',running:'正在形成本轮阅读判断',failed:'本轮更新未完成，不能据此判断没有好内容',partial:'本轮覆盖不完整，先看已确认的内容',ready:`本轮值得读 ${decision.digest.length} 条，先读这一篇`,empty:'本轮暂不推荐：没有新的合格入选内容',needs_analysis:'历史推荐尚未按当前阅读标准整理',not_started:'还没有形成阅读判断'};
+  const descriptions={awaiting_dots:'到 dots 对话中运行研究任务，写回后将在这里展示精选。',running:'任务完成后再形成精选，不把旧推荐当成本轮结果。',failed:'请查看任务错误并重试，历史记录仍然保留。',partial:'部分来源或分析失败。下面只是已完成部分，不代表完整覆盖。',ready:'按技术价值排序，最多保留 5 条；不是必须清空的待办清单。',empty:'可能没有新候选，或候选未达到推荐标准。不为凑数推荐。',needs_analysis:'可用现有摘要重新整理；不会声称重新读过原文。',not_started:'采集并分析后，给出首选、阅读收益与证据边界。'};
   const actions=decision.status==='running'?'':`<button class="button dark" data-job="collect">${decision.status==='failed'?'重试采集':'更新阅读线索'}</button>${decision.history.length?'<button class="button outline" data-job="recommend">重新整理历史</button>':''}`;
   const coverage=decision.latest?`最近任务：${escape(date(decision.latest.finishedAt||decision.latest.startedAt||decision.latest.createdAt))}${decision.latest.type==='recommend'?' · 基于已有摘要重新整理':decision.checked?` · 本轮检查 ${decision.checked} 个来源，${decision.failures} 个失败`:' · 尚无本轮来源覆盖记录'}${decision.errorCount?` · ${decision.errorCount} 项任务异常`:''}`:'尚未运行阅读采集任务';
   const header=`<section class="reading-verdict" aria-labelledby="readingVerdictTitle"><div class="eyebrow muted">YOUR READING DECISION</div><h2 id="readingVerdictTitle">${titles[decision.status]}</h2><p>${descriptions[decision.status]}</p><div class="small-meta">${coverage}</div><div class="reading-actions">${actions}<button class="plain-link" data-reading-view="tasks">查看任务详情 →</button></div></section>`;

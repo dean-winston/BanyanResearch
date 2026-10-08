@@ -84,3 +84,10 @@ test('daily update still collects external articles when blog provider is unavai
  const saved=(await readStore()).jobs.find(j=>j.id===job.id);
  assert.equal(collected,true);assert.equal(saved.status,'partial');assert.match(saved.errors[0],/博客同步.*403/);
 });
+
+test('dots daily pipeline queues only metadata and syncs blog without invoking built-in analysis',async()=>{
+ await updateStore(s=>{s.dotsSettings={mode:'dots'};s.articles=[];s.dotsQueue=[];s.sources=[{id:'dots-source',name:'Dots source',enabled:true}];});
+ const unexpected=async()=>{throw new Error('BUILTIN MODEL MUST NOT RUN');};
+ const runner=createJobRunner({syncBlog:async()=>({articles:[{id:'dots-blog',sha:'sha',title:'Own blog',content:'OWN BLOG',url:'https://example.org/blog'}]}),collectSource:async()=>({status:'success',articles:[{title:'Dots candidate',url:'https://example.org/dots',excerpt:'EXTERNAL BODY'}]}),analyzeBlogs:unexpected,analyzeArticles:unexpected});
+ const job=await runner.enqueue('daily');await runner.idle();const s=await readStore();assert.equal(s.jobs.find(j=>j.id===job.id).status,'success');assert.equal(s.dotsQueue.length,1);assert.ok(!JSON.stringify(s.dotsQueue).includes('EXTERNAL BODY'));assert.equal(s.blogs.find(b=>b.id==='dots-blog').content,'OWN BLOG');
+});

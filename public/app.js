@@ -1,3 +1,4 @@
+import {renderDots,bindDots} from './dots-ui.js';
 import {renderReadingDecision,readingCard} from './reading-view.js';
 
 const labels = { research: '外部世界', engineering: '工程活动', writing: '思想演化' };
@@ -365,6 +366,7 @@ let agentSettingsInitialized = false;
 const agentStatusNames = { idle:'等待唤醒', planning:'判断下一步', working:'执行中', paused:'已暂停', error:'执行失败', budget_limited:'已达到运行上限' };
 function runtimeDescription() {
   const runtime = state.runtime || {}, cloud = runtime.deployment === 'cloud';
+  if(cloud&&state.dots?.settings?.mode==='dots')return 'dots 模式：榕树负责采集，等待 dots 领取并提交研究。下方原有助手暂不自动决策。';
   if (cloud) return runtime.available ? '当前运行于云端。任务结果和异常会记录在此，无需个人电脑保持在线。' : '当前为云端服务，分析模型尚未就绪。配置模型与运行预算后再开启持续运行。';
   if (runtime.provider === 'deepseek') return runtime.available ? '已配置 DeepSeek API，模型连通性与额度以实际任务为准。' : 'DeepSeek API 尚未配置完成，请检查密钥和模型。';
   if (runtime.provider === 'openai') return runtime.available ? '当前运行于本机，已配置 OpenAI API。服务需保持运行；模型连通性及额度以实际任务为准。' : '当前运行于本机，OpenAI API 尚未配置完成。请检查模型和密钥。';
@@ -377,10 +379,11 @@ function showLogin() {
   $('#loginPassword').focus();
 }
 function renderAgents() {
+  renderDots(state);
   $('#agentRuntime').textContent = runtimeDescription();
   const agents = state.agents || [], settings = state.agentSettings;
   const busy = agents.some(a => ['planning','working'].includes(a.status));
-  $('#wakeAgents').disabled = !settings?.enabled || !state.runtime?.available || busy;
+  $('#wakeAgents').disabled = state.dots?.settings?.mode==='dots' || !settings?.enabled || !state.runtime?.available || busy;
   if (!agentSettingsInitialized && settings) {
     const form = $('#agentSettingsForm');
     form.elements.enabled.checked = Boolean(settings.enabled);
@@ -422,3 +425,5 @@ $('#loginForm').addEventListener('submit',async event => {
 $('#logoutButton').addEventListener('click',async () => {
   try{await api('/api/logout',{method:'POST',body:'{}'});state={items:[],answers:[],sources:[]};settingsInitialized=false;agentSettingsInitialized=false;showLogin();}catch(error){toast(error.message);}
 });
+
+bindDots(api,refresh,toast);

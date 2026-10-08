@@ -242,3 +242,31 @@ Unreal 官方 Atom 响应会在完整 XML 后附加浏览器脚本：解析器�
 2026-10-07 曾尝试 GitHub Actions，账号返回“recent account payments have failed or your spending limit needs to be increased”，任务未启动。`.github/workflows/cloudflare.yml` 保留为手动备用，自动触发已关闭，避免持续失败或和 Cloudflare Builds 重复发布。若以后使用该备用流程，须先恢复 GitHub Actions 额度，再配置 GitHub Secret `CLOUDFLARE_API_TOKEN`（当前账号 Workers Scripts Edit、D1 Read、Account Settings Read）及 Variable `CLOUDFLARE_ACCOUNT_ID`。
 
 需要回退时，在 GitHub revert 相应提交并合入 `main`，由 Cloudflare 重新发布。代码回退不会回退数据库内容。
+
+## dots 云端研究工作台
+
+Cloudflare 部署包含 Streamable HTTP MCP：`https://personal-intelligence-system.dean-winston.workers.dev/mcp`。
+
+### 连接
+
+1. 在 ChatGPT → Plugins → Add custom MCP server，填入上面的 URL。
+2. 选择 OAuth，动态客户端注册（DCR），public client / `none`；无需粘贴管理员密码或模型 Key 到聊天。
+3. 在弹出的榕树授权页面使用已有访问密码登录，确认读取研究资料和写回研究结果的权限。只支持 ChatGPT 官方回调地址。
+4. 在榕树 → 持续助手 → dots 研究助手，选择 dots 执行方式，设置采集开关、间隔及每日篇数上限。
+5. 在同一面板复制任务说明给 dots。先验证一次领取、原文阅读、写回推荐和简报，再在 dots 内确认每日执行时间及定时任务。
+
+系统默认保留现有分析方式，部署不会自动扩大数据访问或创建 dots 定时任务。启用 dots 模式后，Cloudflare 按设置采集元数据、同步自己的博客全文；内置持续 Agent 暂停自动决策，外部文章及博客不再自动调用模型分析。手动项目分析和智能问答仍使用现有模型。
+
+### 协议与边界
+
+- `/mcp` 使用官方 MCP SDK 的无状态 Streamable HTTP / JSON 响应。
+- OAuth 授权码 + PKCE S256，绑定 client、redirect URI、resource 和 scope。授权码仅使用一次，访问令牌一小时，刷新令牌30天并轮换。凭据仅存 SHA-256 摘要，授权记录保存在 D1，不出现在 `/api/state` 或 MCP 结果里。
+- `research:read`：读取背景、预览候选、搜索/读取知识；`research:write`：领取和提交研究、更新问题、记录反馈。MCP 不提供管理员设置、删除数据或读取模型凭据的工具。
+- 后台“断开所有 dots 授权”撤销连接，重新连接需要重新授权；榕树数据库仍是研究记录的事实来源。
+- 每批使用唯一 `requestId`，同次重试复用。领取两小时有效，过期后用新 ID 重新领取。领取尝试均消耗当日篇数额度，避免失败无限重跑；额度于 UTC 00:00（北京时间08:00）重置。
+- 提交包含整批文章，每篇只提交一次判断；重复提交返回原收据。可零推荐。推荐须至少70分且声明已读取原文；这是 Agent 的声明，不等于服务器独立验证原文。
+- 外部内容只保存原文地址、元数据和受长度限制的生成分析；不会保存抓取的外部全文。自己的博客可以保存全文。
+- 网页和工具返回的资料均视为不可信输入。工具写入参数有严格 schema、引用存在性验证和每日推荐额度检查。
+- 采集开关只控制榕树，不能代替 dots 的任务调度。dots 额度和第三方 API 用量各按其服务计费，篇数上限不等于金额上限。
+
+验收：`npm test`（含 OAuth / MCP 真实协议请求、权限、重放、队列租约、配额、幂等及无模型采集测试），`npm run cloud:check`。

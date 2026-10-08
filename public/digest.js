@@ -39,5 +39,6 @@ export function readingDecision(store) {
   if (!latest && !digest.length) status = allowed.some(item => !/^ai-reading-v[12]$/.test(item.analysisVersion)) ? 'needs_analysis' : 'not_started';
   if (latest?.status === 'success' && !digest.length && candidates.some(item => !/^ai-reading-v[12]$/.test(item.analysisVersion))) status = 'needs_analysis';
   const checked = latest?.type !== 'recommend' ? sources.filter(source => source.enabled && Number.isFinite(start) && Date.parse(source.lastCollection?.at) >= start && (!Number.isFinite(end) || Date.parse(source.lastCollection?.at) <= end)) : [];
+  if(store.dots?.settings?.mode==='dots'&&store.dots.pending>0&&!active&&!digest.length)status='awaiting_dots';
   return {status,digest,latest,checked:checked.length,failures:checked.filter(source => source.lastCollection?.status === 'error').length,errorCount:latest?.errors?.length || 0,history:recommendations,disabledCount:recommendations.filter(item => sourceFor(item,sources)?.enabled === false).length};
 }
